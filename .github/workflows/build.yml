@@ -19,7 +19,7 @@ permissions:
 jobs:
   bl-kernel:
     runs-on: ubuntu-24.04
-    timeout-minutes: 90
+    timeout-minutes: 240
     steps:
       - name: reclaim disk (kernel tree + container are heavy)
         run: |
