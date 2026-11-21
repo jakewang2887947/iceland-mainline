@@ -44,13 +44,10 @@ jobs:
 
       # build-hdr-tools 在 arm64 容器里跑 dpkg-deb/编译，amd64 runner 上没有
       # binfmt 会以 `exec container process /bin/bash: Exec format error` 挂掉
-      - name: qemu-user-static binfmt (arm64 containers on amd64 host)
+      - name: qemu-user-static binfmt (not needed on native arm64)
         run: |
-          sudo apt-get update -q
-          sudo apt-get install -y --no-install-recommends qemu-user-static
-          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-          ls /proc/sys/fs/binfmt_misc/ | grep -i aarch64
-          docker run --rm --platform linux/arm64 ubuntu:26.04 uname -m
+          uname -m
+          echo "native arm64 host: arm64 containers run without emulation"
 
       - name: buildbl.sh
         run: bash scripts/buildbl.sh
