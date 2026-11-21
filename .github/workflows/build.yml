@@ -55,8 +55,42 @@ jobs:
       - name: buildbl.sh
         run: bash scripts/buildbl.sh
 
+      - name: stage bootloader products (early)
+        if: always()
+        run: |
+          BL=../build/bootloader
+          mkdir -p out-bootloader
+          cp "$BL"/TestBootApp.efi "$BL"/BootApp.efi "$BL"/BootUtil.efi "$BL"/esp.img out-bootloader/ 2>/dev/null || true
+          ls -la out-bootloader || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: products-bl
+          retention-days: 3
+          path: out-bootloader
+
       - name: "buildkernel.sh (after bl — initrd embeds bl's esp.img)"
+        continue-on-error: true
         run: bash scripts/buildkernel.sh
+
+      - name: harvest kernel outputs (always)
+        if: always()
+        run: |
+          K=../build/kernel
+          echo "== top of $K"; ls -la "$K" || true
+          mkdir -p harvest
+          tar -czf harvest/kernel-raw.tgz -C "$K" \
+            --exclude='podman-data*' --exclude='kbuild*' --exclude='linux*' . || true
+          ls -lh harvest/
+          tar -tzf harvest/kernel-raw.tgz | grep -E "(^|/)(Image|.*\.dtb|.*\.deb|.*\.img)$" | head -50 || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kernel-raw
+          retention-days: 3
+          path: harvest
 
       - name: stage products
         run: |
